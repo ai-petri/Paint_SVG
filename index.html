@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+		.container
+		{
+			display: grid;
+			grid-template-columns: 110px auto;
+			height: 600px;
+
+		}
+		#svg
+		{
+			grid-column: 2;
+			width: auto;
+			height: 100%;
+			border: 1px solid black;
+			cursor: crosshair;
+		}
+		
+		#toolbar
+		{
+			grid-column: 1;
+			min-width: 100px;
+		}
+		#toolbar>button
+		{
+			display: block;
+			width: 90%;
+			padding: 5px;
+			margin: 5px;
+		}
+		#toolbar>button>select
+		{
+			display: block;
+			margin: auto;
+		}
+	</style>
+</head>
+<body>
+	
+<div class="container">
+<div id="toolbar">
+<button onclick="selected = 1;">circle</button>
+<button onclick="selected = 2;">ellipse</button>
+<button onclick="selected = 3;">rectangle</button>
+<button onclick="selected = 4;">
+<select id="vertices">
+		<option value="3">triangle</option>
+		<option value="4">rectangle</option>
+		<option value="5">pentagon</option>
+		<option value="6">hexagon</option>
+		<option value="7">heptagon</option>
+		<option value="8">octagon</option>
+</select>
+</button>
+<button onclick="selected = 5;">line</button>
+
+
+</div>
+	<svg id="svg"></svg>
+</div>
+
+	<script>
+		
+	var svg = document.querySelector("#svg");
+
+	var current = null;
+	var selected = 1;
+	var x = 0;
+	var y = 0;
+
+	svg.addEventListener("mousedown",e=>
+		{
+			x = e.clientX - svg.getBoundingClientRect().x;
+			y = e.clientY- svg.getBoundingClientRect().y;
+			switch(selected)
+			{
+				case 1: current = create("circle",{r:1,cx:x,cy:y}); break;
+				case 2: current = create("ellipse",{rx:1,ry:1,cx:x,cy:y}); break;
+				case 3: current = create("rect",{x:x, y:y, width:1, height:1}); break;
+				case 4: current = create("polygon", {}); break;
+				case 5: current = create("line", {x1:x, y1:y, x2:x, y2:y, stroke:"black", "stroke-width":1});break;
+				default: current = null;
+			}
+		});
+
+	svg.addEventListener("mousemove",e=>
+		{
+			if (!current) return;
+			var currentX = e.clientX - svg.getBoundingClientRect().x;
+			var currentY = e.clientY - svg.getBoundingClientRect().y;
+			switch(current.nodeName)
+			{
+				case "circle":
+				var r = Math.sqrt((currentX-x)*(currentX-x) + (currentY-y)*(currentY-y));
+				current.setAttributeNS(null,"r",r);
+				break;
+
+				case "ellipse":
+				current.setAttributeNS(null, "rx",Math.abs(currentX - x));				
+				current.setAttributeNS(null, "ry", Math.abs(currentY - y));
+				break;
+
+				case "rect":
+				if(currentX > x)
+				{
+					current.setAttributeNS(null, "width",currentX - x);
+				}
+				else
+				{
+					current.setAttributeNS(null, "x", currentX);
+					current.setAttributeNS(null, "width", x - currentX);
+				}
+				if(currentY > y)
+				{
+					current.setAttributeNS(null, "height",currentY - y);
+				}
+				else
+				{
+					current.setAttributeNS(null, "y", currentY);
+					current.setAttributeNS(null, "height", y - currentY);
+				}
+				break;
+
+				case "polygon":
+				var r = Math.sqrt((currentX-x)*(currentX-x) + (currentY-y)*(currentY-y));
+				current.setAttributeNS(null, "points", getPolygonCoordinates(x,y,r,document.querySelector("#vertices").value));
+				break;
+
+				case "line": 
+				current.setAttributeNS(null, "x2", currentX);
+				current.setAttributeNS(null, "y2", currentY);		
+				break;
+			}
+
+		
+		});
+
+	svg.addEventListener("mouseup",e=>
+		{
+			current = null;
+			x = 0;
+			y = 0;
+		});
+
+
+
+
+	function create(name, attributes)
+	{
+		var element = document.createElementNS("http://www.w3.org/2000/svg",name);
+		for(var attributeName in attributes)
+		{
+			element.setAttributeNS(null,attributeName, attributes[attributeName]);
+		}
+		svg.appendChild(element);
+		return element;		
+	}
+
+	function getPolygonCoordinates(cx, cy, r, n)
+	{
+		var angle = (2*Math.PI)/n;
+		var str = "";
+		var angle2 = (n==3)? -Math.PI/2: (n==4)? Math.PI/4: (n==5)? -Math.PI/10: 0;
+		for(var i=0; i<n; i++)
+		{
+			str += `${Math.cos(i*angle + angle2)*r + cx},${Math.sin(i*angle + angle2)*r + cy} `;
+		}
+		return str.trim();
+	}
+	</script>
+</body>
+</html>
