@@ -68,6 +68,7 @@
 		</select>
 		</button>
 		<button onclick="selected = 5;">line</button>
+		<button onclick="selected = 6">path</button>
 		<br>
 		<table>Fill
 			<tr>
@@ -193,6 +194,14 @@
 						"stroke-width": stroke_width
 					});
 					break;
+				case 6: current = create("path",
+				{
+					d: `M ${x} ${y}`,
+					fill:`rgb(${fill.red},${fill.green},${fill.blue})`,
+					stroke: `rgb(${stroke.red},${stroke.green},${stroke.blue})`,
+					"stroke-width": stroke_width
+				});
+				break;
 
 				default: current = null;
 			}
@@ -244,6 +253,12 @@
 				case "line": 
 				current.setAttributeNS(null, "x2", currentX);
 				current.setAttributeNS(null, "y2", currentY);		
+				break;
+
+				case "path":
+				var data = current.getAttribute("d");
+				data += ` L ${currentX} ${currentY}`;
+				current.setAttributeNS(null, "d", data);
 				break;
 			}
 
